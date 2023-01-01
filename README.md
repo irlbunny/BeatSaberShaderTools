@@ -5,7 +5,7 @@ Various tools for helping create shaders that work *properly* inside Beat Saber.
 Allows for easily mixing in the Bloom Fog from Beat Saber with the output of your shader, allowing objects to cleanly fade in without popping in (e.g. custom notes). Properly handles fog attenuation/offset, works on PC and should work on Quest as well.
 
 Usage:
-- Include the CGINC in your shader, example: `#include "Assets/Shaders/BloomFog.cginc"`
+- Include the CGINC in your shader, example: `#include "BloomFog.cginc"`
 - Add `#pragma multi_compile __ ENABLE_BLOOM_FOG` in your shader to also build for `ENABLE_BLOOM_FOG`.
 - In your `v2f`, add `BLOOM_FOG_COORDS(1, 2)`. (change `1` and `2` to an empty TEXCOORD number if TEXCOORD1/2 is populated)
 - In your vertex function, at the end of it, add `BLOOM_FOG_TRANSFER(o, o.vertex, v.vertex);` right before the return. (`o.vertex` must be the output of `UnityObjectToClipPos(v.vertex)`)
@@ -31,7 +31,7 @@ Shader "BeatSaber/BloomFog/Texture" {
       #pragma multi_compile __ ENABLE_BLOOM_FOG
       
       #include "UnityCG.cginc"
-      #include "Assets/Shaders/BloomFog.cginc"
+      #include "BloomFog.cginc"
 
       struct appdata {
         float4 vertex : POSITION;
