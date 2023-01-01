@@ -1,6 +1,8 @@
 #ifndef BLOOM_FOG_CG_INCLUDED
 #define BLOOM_FOG_CG_INCLUDED
 
+// #pragma multi_compile __ ENABLE_BLOOM_FOG
+
 #if ENABLE_BLOOM_FOG
 
 uniform float _StereoCameraEyeOffset;
@@ -19,12 +21,15 @@ inline float4 GetFogCoord(float4 clipPos) {
   return float4(((-screenPos.ww + screenPos.xz) * _CustomFogTextureToScreenRatio) + screenPos.ww, clipPos.zw);
 }
 
+// v2f: BLOOM_FOG_COORDS(1, 2)
 #define BLOOM_FOG_COORDS(X, Y) float4 fogCoord : TEXCOORD##X; \
   float3 worldPos : TEXCOORD##Y;
 
+// vert: BLOOM_FOG_TRANSFER(o, o.vertex, v.vertex);
 #define BLOOM_FOG_TRANSFER(TO_FRAG, OUTPUT_VERTEX, INPUT_VERTEX) TO_FRAG.worldPos = mul(unity_ObjectToWorld, INPUT_VERTEX); \
   TO_FRAG.fogCoord = GetFogCoord(OUTPUT_VERTEX)
 
+// frag: BLOOM_FOG_APPLY(i, col, _FogStartOffset, _FogScale);
 #define BLOOM_FOG_APPLY(TO_FRAG, COLOR, FOG_START_OFFSET, FOG_SCALE) float3 distance = TO_FRAG.worldPos + -_WorldSpaceCameraPos; \
   float fogIntensity = max(dot(distance, distance) + -FOG_START_OFFSET, 0); \
   fogIntensity = max((fogIntensity * FOG_SCALE) + -_CustomFogOffset, 0); \
