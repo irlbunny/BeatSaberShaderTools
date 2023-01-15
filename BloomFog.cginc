@@ -43,31 +43,38 @@ inline float GetFogIntensity(float3 distance, float fogStartOffset, float fogSca
   float4 fogCoord : TEXCOORD##X; \
   float3 worldPos : TEXCOORD##Y;
 
-// vert: BLOOM_FOG_TRANSFER(o, o.vertex, v.vertex);
-#define BLOOM_FOG_TRANSFER(TO_FRAG, OUTPUT_VERTEX, INPUT_VERTEX) \
-  TO_FRAG.worldPos = mul(unity_ObjectToWorld, INPUT_VERTEX); \
-  TO_FRAG.fogCoord = GetFogCoord(OUTPUT_VERTEX)
+#define BLOOM_FOG_SURFACE_INPUT \
+  float4 fogCoord; \
+  float3 worldPos;
+
+// vert: BLOOM_FOG_TRANSFER(o, v.vertex);
+#define BLOOM_FOG_TRANSFER(FOG_INPUT, INPUT_VERTEX) \
+  FOG_INPUT.worldPos = mul(unity_ObjectToWorld, INPUT_VERTEX); \
+  float4 fogClipPos = UnityObjectToClipPos(INPUT_VERTEX); \
+  FOG_INPUT.fogCoord = GetFogCoord(fogClipPos)
 
 // frag: BLOOM_FOG_APPLY(i, col, _FogStartOffset, _FogScale);
-#define BLOOM_FOG_APPLY(TO_FRAG, COLOR, FOG_START_OFFSET, FOG_SCALE) \
-  float3 distance = TO_FRAG.worldPos + -_WorldSpaceCameraPos; \
-  float4 fogCol = -float4(COLOR.rgb, 1) + tex2D(_BloomPrePassTexture, TO_FRAG.fogCoord.xy / TO_FRAG.fogCoord.ww); \
+#define BLOOM_FOG_APPLY(FOG_INPUT, COLOR, FOG_START_OFFSET, FOG_SCALE) \
+  float3 distance = FOG_INPUT.worldPos + -_WorldSpaceCameraPos; \
+  float4 fogCol = -float4(COLOR.rgb, 1) + tex2D(_BloomPrePassTexture, FOG_INPUT.fogCoord.xy / FOG_INPUT.fogCoord.ww); \
   fogCol.a = -COLOR.a; \
   COLOR = COLOR + ((GetFogIntensity(distance, FOG_START_OFFSET, FOG_SCALE) + 1) * fogCol)
 
+// WARNING!! Height Fog is experimental, and may have issues. You have been warned.
 // frag: BLOOM_HEIGHT_FOG_APPLY(i, col, _FogStartOffset, _FogScale, _FogHeightOffset, _FogHeightScale);
-#define BLOOM_HEIGHT_FOG_APPLY(TO_FRAG, COLOR, FOG_START_OFFSET, FOG_SCALE, FOG_HEIGHT_OFFET, FOG_HEIGHT_SCALE) \
-  float3 distance = TO_FRAG.worldPos + -_WorldSpaceCameraPos; \
-  float4 fogCol = -float4(COLOR.rgb, 1) + tex2D(_BloomPrePassTexture, TO_FRAG.fogCoord.xy / TO_FRAG.fogCoord.ww); \
+#define BLOOM_HEIGHT_FOG_APPLY(FOG_INPUT, COLOR, FOG_START_OFFSET, FOG_SCALE, FOG_HEIGHT_OFFET, FOG_HEIGHT_SCALE) \
+  float3 distance = FOG_INPUT.worldPos + -_WorldSpaceCameraPos; \
+  float4 fogCol = -float4(COLOR.rgb, 1) + tex2D(_BloomPrePassTexture, FOG_INPUT.fogCoord.xy / FOG_INPUT.fogCoord.ww); \
   fogCol.a = -COLOR.a; \
   COLOR = COLOR + (((GetHeightFogIntensity(distance, FOG_HEIGHT_OFFET, FOG_HEIGHT_SCALE) * GetFogIntensity(distance, FOG_START_OFFSET, FOG_SCALE)) + 1) * fogCol)
 
 #else
 
 #define BLOOM_FOG_COORDS(X, Y)
-#define BLOOM_FOG_TRANSFER(TO_FRAG, OUTPUT_VERTEX, INPUT_VERTEX)
-#define BLOOM_FOG_APPLY(TO_FRAG, COLOR, FOG_START_OFFSET, FOG_SCALE)
-#define BLOOM_HEIGHT_FOG_APPLY(TO_FRAG, COLOR, FOG_START_OFFSET, FOG_SCALE, FOG_HEIGHT_OFFET, FOG_HEIGHT_SCALE)
+#define BLOOM_FOG_SURFACE_INPUT
+#define BLOOM_FOG_TRANSFER(FOG_INPUT, INPUT_VERTEX)
+#define BLOOM_FOG_APPLY(FOG_INPUT, COLOR, FOG_START_OFFSET, FOG_SCALE)
+#define BLOOM_HEIGHT_FOG_APPLY(FOG_INPUT, COLOR, FOG_START_OFFSET, FOG_SCALE, FOG_HEIGHT_OFFET, FOG_HEIGHT_SCALE)
 
 #endif
 
