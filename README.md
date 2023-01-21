@@ -18,4 +18,14 @@ Unlit Shader Usage:
 Shader Examples:
 - Unlit Texture (`KTexture.shader`)
 - Unlit Glow (`KGlow.shader`)
-- Surface Specular + Fake Lighting (`KStandard.shader`)
+- Surface Specular Fake Lighting (`KStandard.shader`)
+
+## CustomLighting.cginc
+Allows you to use Beat Saber's custom directional lighting (max of 5 directional lights), useful if you want to make your objects reactive with the environment lighting.
+
+Notes:
+- This is experimental, and is not 100% finished yet.
+- Only works on surface shaders, not unlit shaders.
+
+Shader Examples:
+- Bloom Fog + Surface Specular Custom Lighting (`KStandardLighting.shader`)
