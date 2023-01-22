@@ -2,10 +2,7 @@
 Various tools for helping create shaders that work *properly* inside Beat Saber. If you have any issues, please report them in this repo or DM me on Discord: `kaitlyn~#3777`
 
 ## BloomFog.cginc
-Allows for easily mixing in the Bloom Fog from Beat Saber with the output of your shader, allowing objects to cleanly fade in without popping in (e.g. custom notes). Properly handles fog attenuation/offset, works on PC and should work on Quest as well.
-
-Notes:
-- Height Fog is experimental and may have issues, use at your own risk!
+Allows for easily mixing in the Bloom Fog from Beat Saber with the output of your shader, allowing objects to cleanly fade in without popping in (e.g. custom notes). Properly handles fog attenuation/offset, as well as height fog, works on PC and should work on Quest as well.
 
 Unlit Shader Usage:
 - Include the CGINC in your shader, example: `#include "BloomFog.cginc"`
@@ -16,9 +13,9 @@ Unlit Shader Usage:
 - Done, your shader should now handle Beat Saber's Bloom Fog correctly!
 
 Shader Examples:
+- Surface Specular Fake Lighting + Height Fog (`KStandard.shader`)
 - Unlit Texture (`KTexture.shader`)
 - Unlit Glow (`KGlow.shader`)
-- Surface Specular Fake Lighting (`KStandard.shader`)
 
 ## CustomLighting.cginc
 Allows you to use Beat Saber's custom directional lighting (max of 5 directional lights), useful if you want to make your objects reactive with the environment lighting.
@@ -29,3 +26,10 @@ Notes:
 
 Shader Examples:
 - Bloom Fog + Surface Specular Custom Lighting (`KStandardLighting.shader`)
+
+# Various Notes
+If you're using Bloom Fog/Height Fog in your custom notes, you should consider using the following values for Bloom Fog/Height Fog:
+- `_FogHeightOffset`: 0
+- `_FogHeightScale`: 2.5
+- `_FogStartOffset`: 100
+- `_FogScale`: 0.5

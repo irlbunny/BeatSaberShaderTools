@@ -5,6 +5,8 @@
     _FakeLightDir ("Fake Light Direction", Vector) = (0,0,0,1)
     _FakeLightColor ("Fake Light Color", Color) = (1,1,1,1)
     _FakeLightAtten ("Fake Light Attenuation", float) = 1
+    _FogHeightOffset ("Fog Height Offset", float) = 0
+    _FogHeightScale ("Fog Height Scale", float) = 1
     _FogStartOffset ("Fog Start Offset", float) = 0
     _FogScale ("Fog Scale", float) = 1
   }
@@ -23,6 +25,8 @@
     fixed4 _FakeLightDir;
     fixed4 _FakeLightColor;
     float _FakeLightAtten;
+    float _FogHeightOffset;
+    float _FogHeightScale;
     float _FogStartOffset;
     float _FogScale;
 
@@ -49,7 +53,7 @@
     }
 
     void fogcolor (Input IN, SurfaceOutput o, inout fixed4 color) {
-      BLOOM_FOG_APPLY(IN, color, _FogStartOffset, _FogScale);
+      BLOOM_HEIGHT_FOG_APPLY(IN, color, _FogStartOffset, _FogScale, _FogHeightOffset, _FogHeightScale);
     }
 
     void surf (Input IN, inout SurfaceOutput o) {
