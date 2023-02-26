@@ -15,12 +15,31 @@ uniform float _StereoCameraEyeOffset;
 
 inline float4 GetFogCoord(float4 clipPos) {
   float eyeOffset = (unity_StereoEyeIndex * (_StereoCameraEyeOffset * 2)) + -_StereoCameraEyeOffset;
+#if UNITY_UV_STARTS_AT_TOP
   float4 screenPos;
   screenPos.xyw = clipPos.yxw * 0.5f;
   screenPos.z = screenPos.x * _ProjectionParams.x;
   screenPos.yz = screenPos.ww + screenPos.yz;
   screenPos.x = (clipPos.w * eyeOffset) + screenPos.y;
   return float4(((-screenPos.ww + screenPos.xz) * _CustomFogTextureToScreenRatio) + screenPos.ww, clipPos.zw);
+#else
+  // This is so gross, I hate it.
+  // Required for Android... sigh.
+  // I'll eventually clean this up... or not.
+  float4 u_xlat1;
+  float2 u_xlat3;
+  float2 u_xlat16_2;
+  float u_xlat16_10;
+  u_xlat1.x = clipPos.y * _ProjectionParams.x;
+  u_xlat1.w = u_xlat1.x * 0.5f;
+  u_xlat1.xz = clipPos.xw * 0.5f;
+  u_xlat1.xy = u_xlat1.zz + u_xlat1.xw;
+  u_xlat3.x = (clipPos.w * eyeOffset) + u_xlat1.x;
+  u_xlat3.y = clipPos.w + -u_xlat1.y;
+  u_xlat16_2.xy = (-clipPos.ww * 0.5f) + u_xlat3.xy;
+  u_xlat16_10 = clipPos.w * 0.5f;
+  return float4((u_xlat16_2.xy * _CustomFogTextureToScreenRatio.xy) + u_xlat16_10, clipPos.zw);
+#endif
 }
 
 inline float GetHeightFogIntensity(float3 worldPos, float fogHeightOffset, float fogHeightScale) {
