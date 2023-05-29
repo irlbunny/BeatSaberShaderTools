@@ -42,7 +42,7 @@
         v2f o;
         o.vertex = UnityObjectToClipPos(v.vertex);
         o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-        BLOOM_FOG_TRANSFER(o, v.vertex);
+        BLOOM_FOG_INITIALIZE(o, v.vertex);
         return o;
       }
       

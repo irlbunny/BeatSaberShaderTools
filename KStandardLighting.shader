@@ -29,7 +29,7 @@
 
     void vert (inout appdata_full v, out Input data) {
       UNITY_INITIALIZE_OUTPUT(Input, data);
-      BLOOM_FOG_TRANSFER(data, v.vertex);
+      BLOOM_FOG_INITIALIZE(data, v.vertex);
     }
 
     void fogcolor (Input IN, SurfaceOutput o, inout fixed4 color) {
