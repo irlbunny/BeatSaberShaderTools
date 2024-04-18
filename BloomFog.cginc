@@ -11,14 +11,18 @@ uniform sampler2D _BloomPrePassTexture;
 uniform float2 _CustomFogTextureToScreenRatio;
 uniform float _StereoCameraEyeOffset;
 
-inline float2 GetFogCoord(float4 clipPos) {
-  float4 screenPos = ComputeNonStereoScreenPos(clipPos);
-  float2 screenPosNormalized = screenPos.xy / screenPos.w;
+inline float4 GetFogCoord(float4 worldPos) {
+  float4 u_xlat1;
+  float4 u_xlat3;
+
   float eyeOffset = (unity_StereoEyeIndex * (_StereoCameraEyeOffset * 2)) + -_StereoCameraEyeOffset;
-  return float2(
-    ((eyeOffset + screenPosNormalized.x) + -0.5) * _CustomFogTextureToScreenRatio.x + 0.5,
-    (screenPosNormalized.y + -0.5) * _CustomFogTextureToScreenRatio.y + 0.5
-  );
+  u_xlat1 = mul(unity_MatrixVP, worldPos);
+  u_xlat3.xyw = u_xlat1.yxw * float3(0.5, 0.5, 0.5);
+  u_xlat3.z = u_xlat3.x * _ProjectionParams.x;
+  u_xlat3.yz = u_xlat1.ww * float2(0.5, 0.5) + u_xlat3.yz;
+  u_xlat3.x = u_xlat1.w * eyeOffset + u_xlat3.y;
+  u_xlat3.xy = (-u_xlat1.ww) * float2(0.5, 0.5) + u_xlat3.xz;
+  return float4(u_xlat3.xy * _CustomFogTextureToScreenRatio.xy + u_xlat3.ww, u_xlat1.zw);
 }
 
 inline float GetHeightFogIntensity(float3 worldPos, float fogHeightOffset, float fogHeightScale) {
@@ -37,31 +41,31 @@ inline float GetFogIntensity(float3 distance, float fogStartOffset, float fogSca
 }
 
 #define BLOOM_FOG_COORDS(fogCoordIndex, worldPosIndex) \
-  float2 fogCoord : TEXCOORD##fogCoordIndex; \
-  float3 worldPos : TEXCOORD##worldPosIndex;
+  float4 fogCoord : TEXCOORD##fogCoordIndex; \
+  float4 fogWorldPos : TEXCOORD##worldPosIndex;
 
 #define BLOOM_FOG_SURFACE_INPUT \
-  float2 fogCoord; \
-  float3 worldPos;
+  float4 fogCoord; \
+  float4 fogWorldPos;
 
-#define BLOOM_FOG_INITIALIZE(outputStruct, inputVertex) \
-  outputStruct.fogCoord = GetFogCoord(UnityObjectToClipPos(inputVertex)); \
-  outputStruct.worldPos = mul(unity_ObjectToWorld, inputVertex)
+#define BLOOM_FOG_INITIALIZE(outputStruct, vertex) \
+  outputStruct.fogWorldPos = mul(unity_ObjectToWorld, float4(vertex.xyz, 1)); \
+  outputStruct.fogCoord = GetFogCoord(outputStruct.fogWorldPos)
 
 #define BLOOM_FOG_SAMPLE(fogData) \
-  tex2D(_BloomPrePassTexture, fogData.fogCoord)
+  tex2D(_BloomPrePassTexture, fogData.fogCoord.xy / fogData.fogCoord.w)
 
 #define BLOOM_FOG_APPLY(fogData, col, fogStartOffset, fogScale) \
-  float3 fogDistance = fogData.worldPos + -_WorldSpaceCameraPos; \
+  float3 fogDistance = fogData.fogWorldPos.xyz + -_WorldSpaceCameraPos; \
   float4 fogCol = -float4(col.rgb, 1) + BLOOM_FOG_SAMPLE(fogData); \
   fogCol.a = -col.a; \
   col = col + ((GetFogIntensity(fogDistance, fogStartOffset, fogScale) + 1) * fogCol)
 
 #define BLOOM_HEIGHT_FOG_APPLY(fogData, col, fogStartOffset, fogScale, fogHeightOffset, fogHeightScale) \
-  float3 fogDistance = fogData.worldPos + -_WorldSpaceCameraPos; \
+  float3 fogDistance = fogData.fogWorldPos.xyz + -_WorldSpaceCameraPos; \
   float4 fogCol = -float4(col.rgb, 1) + BLOOM_FOG_SAMPLE(fogData); \
   fogCol.a = -col.a; \
-  col = col + (((GetHeightFogIntensity(fogData.worldPos, fogHeightOffset, fogHeightScale) * GetFogIntensity(fogDistance, fogStartOffset, fogScale)) + 1) * fogCol)
+  col = col + (((GetHeightFogIntensity(fogData.fogWorldPos.xyz, fogHeightOffset, fogHeightScale) * GetFogIntensity(fogDistance, fogStartOffset, fogScale)) + 1) * fogCol)
 
 #else
 
